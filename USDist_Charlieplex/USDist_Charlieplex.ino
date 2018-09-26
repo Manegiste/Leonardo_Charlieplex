@@ -17,25 +17,48 @@ void lightLED (int LED)
 {
   // 4 pins are used, set state for each
   for (int i = 0; i < 4; i++)
-  { 
-    // if a pin has a state of -1 or 1 it is an output  
+  {
+    // if a pin has a state of -1 or 1 it is an output
     if (myLEDs.LED[i][LED - 1])
     {
       pinMode(myLEDs.pin[i], OUTPUT);
-      // -1 indicates LOW 
+      // -1 indicates LOW
       if (myLEDs.LED[i][LED - 1] == -1)
         digitalWrite(myLEDs.pin[i], LOW);
       else
-      // 1 indicates HIGH
+        // 1 indicates HIGH
         digitalWrite(myLEDs.pin[i], HIGH);
     }
     // else set its mode to INPUT to trigger the "tri" state
     else
-       pinMode(myLEDs.pin[i], INPUT);
+      pinMode(myLEDs.pin[i], INPUT);
   }
 
 }
 
+#define US_TRIG 0
+#define US_ECHO 1
+
+int US_Measure()
+{
+  int duration;
+  int distance;
+
+  // Clears the trigPin
+  digitalWrite(US_TRIG, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(US_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(US_TRIG, LOW);
+
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(US_ECHO, HIGH);
+  // Calculating the distance
+  distance = duration * 0.034 / 2;
+
+  return distance;
+}
 void setup() {
 
   myLEDs.pin[0] = 4;
@@ -108,18 +131,45 @@ void setup() {
   delay(100);
   lightLED(12);
   delay(100);
-}
 
-void loop() {
+  // Ultrasound: send on 0, get feedback on 1
+  pinMode(US_TRIG, OUTPUT);
+  pinMode(US_ECHO, INPUT);
 
-
-
+  Serial.begin(9600);
+  Serial.print ("Startup!");
 
   for (int i = 1; i <= 12; i++)
   {
     lightLED(i);
     delay(100);
   }
+}
+
+void loop() {
+
+  int dist = 0;
+  dist = US_Measure();
+
+  // more than 150cm : two green LED
+  if (dist > 150)
+  {
+    lightLED(10);
+    lightLED (9);
+  }
+  else if (dist > 100)
+  {
+    lightLED(9);
+  }
+  else if ((dist > 10) && (dist <= 60))
+  {
+    for (int i = 1; i <= (int)dist / 6; i++)
+      lightLED(i);
+  }
+
+
+
+
 
 
 }
